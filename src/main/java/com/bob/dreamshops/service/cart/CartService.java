@@ -6,6 +6,7 @@ import com.bob.dreamshops.model.User;
 import com.bob.dreamshops.repository.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -22,8 +23,11 @@ public class CartService implements ICartService {
     }
 
     @Override
+    @Transactional
     public void clearCart(Long id) {
-        cartRepository.deleteById(id);
+        Cart cart = getCart(id);
+        cart.getItems().clear();
+        cart.setTotalAmount(BigDecimal.ZERO);
     }
 
     @Override

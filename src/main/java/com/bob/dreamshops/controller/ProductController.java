@@ -1,6 +1,7 @@
 package com.bob.dreamshops.controller;
 
 import com.bob.dreamshops.dto.ProductDto;
+import com.bob.dreamshops.exceptions.AlreadyExistsException;
 import com.bob.dreamshops.exceptions.ResourceNotFoundException;
 import com.bob.dreamshops.model.Product;
 import com.bob.dreamshops.request.AddProductRequest;
@@ -9,12 +10,12 @@ import com.bob.dreamshops.response.ApiResponse;
 import com.bob.dreamshops.service.product.IProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -42,12 +43,17 @@ public class ProductController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/add")
     public ResponseEntity<ApiResponse> addProduct(@RequestBody AddProductRequest request) {
         try {
             Product theProduct = productService.addProduct(request);
             ProductDto productDto = productService.convertToDto(theProduct);
             return ResponseEntity.ok(new ApiResponse("Add product success", productDto));
+        } catch (AlreadyExistsException e) {
+            return ResponseEntity
+                    .status(CONFLICT)
+                    .body(new ApiResponse(e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity
                     .status(INTERNAL_SERVER_ERROR)
@@ -55,6 +61,8 @@ public class ProductController {
         }
     }
 
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/product/{productId}/update")
     public ResponseEntity<ApiResponse> updateProduct(@RequestBody UpdateProductRequest request, @PathVariable Long productId) {
         try {
@@ -68,6 +76,7 @@ public class ProductController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/product/{productId}/delete")
     public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long productId) {
         try {

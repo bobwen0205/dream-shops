@@ -10,10 +10,10 @@ import com.bob.dreamshops.model.Product;
 import com.bob.dreamshops.repository.OrderRepository;
 import com.bob.dreamshops.repository.ProductRepository;
 import com.bob.dreamshops.service.cart.CartService;
-import com.bob.dreamshops.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,17 +27,16 @@ public class OrderService implements IOrderService {
     private final ProductRepository productRepository;
     private final CartService cartService;
     private final ModelMapper modelMapper;
-    private final UserService userService;
 
     @Override
+    @Transactional
     public OrderDto placeOrder(Long userId) {
         Cart cart = cartService.getCartByUserId(userId);
         Order order = createOrder(cart);
         List<OrderItem> orderItems = createOrderItems(order, cart);
         order.setItems(new HashSet<>(orderItems));
         order.setTotalAmount(calculateTotalAmount(order));
-        userService.getUserById(userId).setCart(null);
-        // cartService.clearCart(cart.getId());
+        cartService.clearCart(cart.getId());
         return convertToDto(orderRepository.save(order));
     }
 

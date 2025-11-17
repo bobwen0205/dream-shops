@@ -2,6 +2,7 @@ package com.bob.dreamshops.service.product;
 
 import com.bob.dreamshops.dto.ImageDto;
 import com.bob.dreamshops.dto.ProductDto;
+import com.bob.dreamshops.exceptions.AlreadyExistsException;
 import com.bob.dreamshops.exceptions.ResourceNotFoundException;
 import com.bob.dreamshops.model.Category;
 import com.bob.dreamshops.model.Image;
@@ -33,6 +34,11 @@ public class ProductService implements IProductService {
         // If Yes, set it as the new product category
         // If No, then save it as a new category
         // Then set as the new product category
+
+        if (productExists(request.getName(), request.getBrand())) {
+            throw new AlreadyExistsException("Product already exists");
+        }
+
         Category category = Optional.ofNullable(categoryRepository.findByName(request.getCategory().getName()))
                 .orElseGet(() -> {
                     Category newCategory = new Category(request.getCategory().getName());
@@ -164,5 +170,9 @@ public class ProductService implements IProductService {
                 .toList();
         productDto.setImages(imageDtos);
         return productDto;
+    }
+
+    private boolean productExists(String name, String brand) {
+        return productRepository.existsByNameAndBrand(name, brand);
     }
 }

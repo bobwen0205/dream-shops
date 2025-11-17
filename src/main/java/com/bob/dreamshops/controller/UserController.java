@@ -7,6 +7,7 @@ import com.bob.dreamshops.model.User;
 import com.bob.dreamshops.request.CreateUserRequest;
 import com.bob.dreamshops.request.UpdateUserRequest;
 import com.bob.dreamshops.response.ApiResponse;
+import com.bob.dreamshops.service.cart.ICartService;
 import com.bob.dreamshops.service.user.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${api.prefix}/users")
 public class UserController {
     private final IUserService userService;
+    private final ICartService cartService;
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse> getUserById(@PathVariable Long userId) {
@@ -35,6 +37,7 @@ public class UserController {
     public ResponseEntity<ApiResponse> createUser(@RequestBody CreateUserRequest request) {
         try {
             User user = userService.createUser(request);
+            cartService.initializeNewCart(user);
             UserDto userDto = userService.convertToDto(user);
             return ResponseEntity.ok(new ApiResponse("User created successfully", userDto));
         } catch (AlreadyExistsException e) {
